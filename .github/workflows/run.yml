@@ -1,8 +1,20 @@
 name: Auto Update
 on:
   schedule:
-    - cron: '*/10 * * * *'
-  workflow_dispatch:
+    # 1. 平日早尖峰 (台灣 07:30 - 08:30): 每 5 分鐘跑一次
+    - cron: '30-59 23 * * 0-4'
+    - cron: '0-30 0 * * 1-5'
+    
+    # 2. 平日晚尖峰 (台灣 17:00 - 18:00): 每 5 分鐘跑一次
+    - cron: '0-59 9 * * 1-5'
+    
+    # 3. 平日其他時間: 每 15 分鐘跑一次
+    - cron: '*/15 1-8 * * 1-5'
+    - cron: '*/15 10-22 * * 1-5'
+    - cron: '0,15 23 * * 0-4'
+    - cron: '45 0 * * 1-5'
+
+  workflow_dispatch: # 保留手動更新按鈕
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,6 +22,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install requests
       - name: Run script
         run: python main.py
       - name: Update page
@@ -17,5 +35,5 @@ jobs:
           git config --global user.name "Bot"
           git config --global user.email "bot@github.com"
           git add index.html
-          git commit -m "update" || exit 0
+          git commit -m "自動更新路況" || exit 0
           git push
