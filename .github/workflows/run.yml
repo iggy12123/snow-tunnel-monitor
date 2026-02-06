@@ -1,9 +1,7 @@
 name: Auto Update
 on:
-  schedule:
-    - cron: '*/30 * * * *'  # 每 30 分鐘更新一次
-  workflow_dispatch:        # 保留手動按鈕
-  workflow_dispatch: # 保留手動更新按鈕
+  workflow_dispatch: # 只保留手動觸發按鈕，防止自動跑光額度
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,5 +22,5 @@ jobs:
           git config --global user.name "Bot"
           git config --global user.email "bot@github.com"
           git add index.html
-          git commit -m "自動更新路況" || exit 0
+          git commit -m "手動更新路況" || exit 0
           git push
