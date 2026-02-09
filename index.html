@@ -2,20 +2,21 @@
     <html>
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>雪隧路況專業看板</title>
+        <title>雪隧路況偵錯版</title>
         <style>
-            body { font-family: sans-serif; background-color: #121212; color: white; text-align: center; padding: 10px; }
-            .card { background: #1e1e1e; border-radius: 15px; padding: 20px; margin: 15px auto; max-width: 450px; border: 1px solid #333; }
-            .title { font-size: 1.5em; color: #f1c40f; font-weight: bold; margin-bottom: 20px; }
-            .lane-container { display: flex; justify-content: space-around; }
-            .lane-box { background: #2a2a2a; padding: 15px; border-radius: 12px; width: 45%; }
-            .lane-name { font-size: 0.9em; color: #888; margin-bottom: 5px; }
-            .speed { color: #2ecc71; font-size: 1.8em; font-weight: bold; }
-            .flow { color: #3498db; font-size: 0.8em; margin-top: 5px; }
-            .tips { color: #e67e22; margin-top: 20px; font-weight: bold; border-top: 1px solid #333; padding-top: 10px; }
+            body { font-family: sans-serif; background-color: #121212; color: white; text-align: center; padding: 20px; }
+            .card { background: #1e1e1e; border-radius: 15px; padding: 20px; margin: 15px auto; max-width: 400px; border: 1px solid #444; }
+            .error { color: #ff4757; font-size: 0.9em; background: #2f3542; padding: 10px; border-radius: 5px; margin: 10px 0; }
+            .lane { display: flex; justify-content: space-around; margin-top: 15px; }
+            .speed { font-size: 2em; color: #2ecc71; font-weight: bold; }
         </style>
     </head>
     <body>
-        <h2 style="margin-bottom: 5px;">🚗 雪隧即時數據儀表板</h2>
-        <p style="color:#aaa; font-size:0.8em;">最後更新：2026-02-09 16:12:45</p>
-    <div class='card'>數據連線中，請稍後再試</div><p style='color:#444; font-size:0.7em; margin-top:30px;'>數據來源：交通部 TDX 平台</p></body></html>
+        <h2>🔍 雪隧數據讀取狀態</h2>
+        <p>更新時間：2026-02-09 16:15:42</p>
+        
+        <div class="card">
+            <p>1. 身分驗證：金鑰驗證失敗 (錯誤碼: 404)</p>
+            <p>2. 數據抓取：尚未讀取</p>
+        </div>
+    <div class="card" style="border-color: #ff4757;">⚠️ 目前無法讀取數據，請稍後再試</div></body></html>
