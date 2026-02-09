@@ -1,15 +1,17 @@
 // main.js
-// Node.js 18+ 可直接跑（內建 fetch）
-// 記得先把 CLIENT_ID / CLIENT_SECRET 換成你的
+// Node.js 18+
+// 雪山隧道（國道5號）即時速率 + 車流量
 
-const CLIENT_ID = 'c1124209-ca5c1e20-3385-4a5a';
-const CLIENT_SECRET = '4ead6654-55c6-4d1e-adf6-d42edc4bd3c2';
+const CLIENT_ID = process.env.TDX_CLIENT_ID || 'c1124209-ca5c1e20-3385-4a5a';
+const CLIENT_SECRET = process.env.TDX_CLIENT_SECRET || '4ead6654-55c6-4d1e-adf6-d42edc4bd3c2';
 
-const TOKEN_URL = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
+const TOKEN_URL =
+  'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
 
-// 雪隧（國道5號）API
-const SPEED_API = 'https://tdx.transportdata.tw/api/basic/v2/Road/Traffic/LiveTrafficSpeed/Freeway';
-const VOLUME_API = 'https://tdx.transportdata.tw/api/basic/v2/Road/Traffic/LiveTrafficVolume/Freeway';
+const SPEED_API =
+  'https://tdx.transportdata.tw/api/basic/v2/Road/Traffic/LiveTrafficSpeed/Freeway';
+const VOLUME_API =
+  'https://tdx.transportdata.tw/api/basic/v2/Road/Traffic/LiveTrafficVolume/Freeway';
 
 async function getAccessToken() {
   const body = new URLSearchParams({
@@ -28,68 +30,72 @@ async function getAccessToken() {
   return data.access_token;
 }
 
-async function fetchTDX(api, token) {
-  const res = await fetch(`${api}?$format=JSON`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
+async function fetchTDX(url, token) {
+  const res = await fetch(`${url}?$format=JSON`, {
+    headers: { Authorization: `Bearer ${token}` }
   });
   return res.json();
 }
 
-function filterSnowTunnel(data) {
-  // 國道5號 + 雪山隧道
-  return data.filter(item =>
-    item.FreewayID === '005' &&
-    item.RoadName?.includes('雪山')
-  );
+// 國道 5 號（含雪隧）
+function filterFreeway5(data) {
+  return data.filter(item => item.FreewayID === '005');
 }
 
-function summarize(speedData, volumeData) {
-  const lanes = {};
+function getDirection(dir) {
+  if (dir === 'N' || dir === 1 || dir === '1') return '北上';
+  if (dir === 'S' || dir === 2 || dir === '2') return '南下';
+  return '未知方向';
+}
+
+function getLane(lane) {
+  if (!lane) return '未知車道';
+  if (lane.includes('1')) return '左側車道';
+  if (lane.includes('2')) return '右側車道';
+  return `車道 ${lane}`;
+}
+
+function mergeData(speedData, volumeData) {
+  const result = {};
 
   volumeData.forEach(v => {
     const key = `${v.Direction}_${v.LaneID}`;
-    lanes[key] = lanes[key] || {};
-    lanes[key].volume = v.Volume || 0;
+    result[key] = result[key] || {};
+    result[key].volume = v.Volume ?? 0;
   });
 
   speedData.forEach(s => {
     const key = `${s.Direction}_${s.LaneID}`;
-    lanes[key] = lanes[key] || {};
-    lanes[key].speed = s.Speed || 0;
+    result[key] = result[key] || {};
+    result[key].speed = s.Speed ?? 0;
   });
 
-  return lanes;
+  return result;
 }
 
-function printResult(lanes) {
-  console.log('📊 雪山隧道 即時交通狀況\n');
+function printResult(data) {
+  console.log('\n📊 雪山隧道（國道5號）即時交通狀況\n');
 
-  const dirMap = { 'N': '北上', 'S': '南下' };
-  const laneMap = { '1': '左側車道', '2': '右側車道' };
-
-  let maxLane = null;
   let maxVolume = 0;
+  let maxLane = '';
 
-  Object.entries(lanes).forEach(([key, data]) => {
+  for (const [key, val] of Object.entries(data)) {
     const [dir, lane] = key.split('_');
-    const volume = data.volume || 0;
-    const speed = data.speed || 0;
 
-    console.log(
-      `${dirMap[dir]}｜${laneMap[lane]}：` +
-      `速率 ${speed} km/h｜載運量 ${volume} 輛`
-    );
+    const speed = val.speed ?? 0;
+    const volume = val.volume ?? 0;
+
+    const text = `${getDirection(dir)}｜${getLane(lane)}：速率 ${speed} km/h｜載運量 ${volume} 輛`;
+    console.log(text);
 
     if (volume > maxVolume) {
       maxVolume = volume;
-      maxLane = `${dirMap[dir]} ${laneMap[lane]}`;
+      maxLane = `${getDirection(dir)} ${getLane(lane)}`;
     }
-  });
+  }
 
   console.log('\n🚨 車流量最多的車道');
-  console.log(`➡️ ${maxLane}（${maxVolume} 輛）`);
+  console.log(`➡️ ${maxLane}（${maxVolume} 輛）\n`);
 }
 
 async function main() {
@@ -99,14 +105,14 @@ async function main() {
     const speedRaw = await fetchTDX(SPEED_API, token);
     const volumeRaw = await fetchTDX(VOLUME_API, token);
 
-    const speedData = filterSnowTunnel(speedRaw);
-    const volumeData = filterSnowTunnel(volumeRaw);
+    const speedData = filterFreeway5(speedRaw);
+    const volumeData = filterFreeway5(volumeRaw);
 
-    const lanes = summarize(speedData, volumeData);
+    const merged = mergeData(speedData, volumeData);
 
-    printResult(lanes);
+    printResult(merged);
   } catch (err) {
-    console.error('❌ 發生錯誤', err);
+    console.error('❌ 錯誤：', err);
   }
 }
 
