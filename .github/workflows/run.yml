@@ -1,6 +1,12 @@
-name: Auto Update
+name: Snow Tunnel Monitor Full Auto
 on:
-  workflow_dispatch: # 只保留手動觸發按鈕，防止自動跑光額度
+  schedule:
+    # 平日早尖峰 (台灣 07:30 - 08:30)
+    - cron: '30-59 23 * * 0-4'
+    - cron: '0-30 0 * * 1-5'
+    # 平日晚尖峰 (台灣 17:00 - 18:00)
+    - cron: '0-59 9 * * 1-5'
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -22,5 +28,5 @@ jobs:
           git config --global user.name "Bot"
           git config --global user.email "bot@github.com"
           git add index.html
-          git commit -m "手動更新路況" || exit 0
+          git commit -m "早晚尖峰自動更新" || exit 0
           git push
