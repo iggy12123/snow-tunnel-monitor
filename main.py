@@ -24,6 +24,7 @@ def get_data(token):
     try:
         res = requests.get(url, headers=headers, timeout=10)
         vd_list = res.json().get('VDLives', [])
+        # 鎖定雪隧北上與南下關鍵偵測點
         targets = {"nfb0020N": "北上 (往台北)", "nfb0020S": "南下 (往宜蘭)"}
         final_results = {}
         for vd in vd_list:
@@ -52,9 +53,9 @@ def build_web():
     <html>
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>雪隧路況正式版</title>
+        <title>雪隧路況專屬看板</title>
         <style>
-            body {{ font-family: sans-serif; background-color: #121212; color: white; text-align: center; padding: 15px; }}
+            body {{ font-family: sans-serif; background-color: #121212; color: white; text-align: center; padding: 10px; }}
             .card {{ background: #1e1e1e; border-radius: 15px; padding: 20px; margin: 15px auto; max-width: 350px; border: 1px solid #333; }}
             .title {{ font-size: 1.4em; color: #f1c40f; font-weight: bold; margin-bottom: 15px; }}
             .lane {{ display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; padding: 15px; margin: 8px 0; border-radius: 10px; }}
@@ -63,20 +64,20 @@ def build_web():
         </style>
     </head>
     <body>
-        <h2>📊 雪山隧道即時監控 (正式版)</h2>
+        <h2>🚗 雪山隧道早晚尖峰看板</h2>
         <p style="color:#aaa;">更新時間：{time_str}</p>
     """
     if not data:
-        html += "<div class='card'>數據連線失敗，請檢查金鑰設定</div>"
+        html += "<div class='card'>連線失敗，請檢查金鑰</div>"
     else:
         for direct, lanes in data.items():
             html += f'<div class="card"><div class="title">{direct}</div>'
             for l in lanes:
                 html += f'<div class="lane"><span>{l["name"]}</span><span class="speed">{l["speed"]} km/h</span><span class="flow">{l["flow"]} 輛/時</span></div>'
             best = "內側" if lanes[0]['speed'] >= lanes[1]['speed'] else "外側"
-            html += f'<div style="color:#e67e22; margin-top:10px; font-weight:bold;">💡 建議走：{best}</div></div>'
+            html += f'<div style="color:#e67e22; margin-top:10px; font-weight:bold;">💡 建議：走{best}</div></div>'
             
-    html += "<p style='color:#555; font-size:0.7em; margin-top:30px;'>數據來源：交通部 TDX 平台</p></body></html>"
+    html += "<p style='color:#555; font-size:0.7em; margin-top:30px;'>基礎會員版：每月 3,000 次額度</p></body></html>"
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
 
